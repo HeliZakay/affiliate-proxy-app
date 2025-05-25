@@ -2,7 +2,7 @@
 
 ## 1. Architecture and Design Choices
 
-- **Service-Oriented**: I built a single Express-based microservice (`app.js`) responsible for:
+- **Service-Oriented**: We built a single Express-based microservice (`app.js`) responsible for:
 
   1. Accepting incoming traffic source requests
   2. Generating or retrieving an internal identifier (`our_param`)
@@ -10,7 +10,8 @@
   4. Exposing a retrieval API
 
 - **Containerization**: The entire stack (Node service + Redis) runs via Docker Compose, ensuring consistent environments and easy local testing.
-- **Redis as Storage**: Chosen for high-throughput key/value operations. I leverage:
+
+- **Redis as Storage**: Chosen for high-throughput key/value operations. We leverage:
 
   - **Hashes** (`HSET`/`HGETALL`) to store mappings and metadata atomically
   - **Atomic operations** (`MULTI`/`EXEC`) to ensure consistency
@@ -52,8 +53,10 @@
 ## 5. Security Considerations
 
 - **Parameter Validation**: `express-validator` enforces required types and whitelists allowed values, preventing injection attacks.
-- **API Key Protection**: The retrieval endpoint requires a valid x-api-key header (or api_key query param) matching API_KEY from the environment, preventing unauthorized access.
 - **No Sensitive Data in Logs**: Only non-PII request metadata is logged.
+- **API Key Protection**: Retrieval endpoint requires a valid `x-api-key` header or `api_key` query parameter, enforced via `API_KEY` from the environment.
+- **Rate Limiting**: Integrate middleware (e.g. `express-rate-limit`) to prevent abuse.
+- **HTTPS in Production**: The service should sit behind a TLS-terminating reverse proxy (e.g. NGINX or AWS ALB).
 
 ## 6. Performance Optimizations
 
@@ -84,9 +87,8 @@
 
 5. **Security Hardening**
 
-   - integrating rate-limit middleware (e.g. `express-rate-limit`) would prevent abuse.
-   - Redirect all HTTP to HTTPS in your Express middleware and send Strict-Transport-Security headers so browsers only use TLS.
-   - Only allow known affiliate domains to call your redirect endpoint. Reject all other origins to prevent unwanted client–side use.
+   - **API Key Protection**: Retrieval endpoint requires a valid `x-api-key` header or `api_key` query parameter, enforced via `API_KEY` from the environment.
+   - **Rate Limiting**: Enforce rate limits using middleware (e.g. `express-rate-limit`).
 
 6. **Feature Extensions**
 
