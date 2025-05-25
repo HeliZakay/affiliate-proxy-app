@@ -54,7 +54,6 @@
 - **Parameter Validation**: `express-validator` enforces required types and whitelists allowed values, preventing injection attacks.
 - **API Key Protection**: The retrieval endpoint requires a valid x-api-key header (or api_key query param) matching API_KEY from the environment, preventing unauthorized access.
 - **No Sensitive Data in Logs**: Only non-PII request metadata is logged.
-- **HTTPS in Production**: The service should sit behind a TLS-terminating reverse proxy (e.g. NGINX or AWS ALB).
 
 ## 6. Performance Optimizations
 
