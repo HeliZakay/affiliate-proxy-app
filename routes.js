@@ -5,6 +5,16 @@ import redisClient from "./redisClient.js";
 import { AFFILIATE_BASE_URL } from "./config.js";
 import logger from "./logger.js";
 import { validateRedirect } from "./validation.js";
+import { API_KEY } from "./config.js";
+
+// Middleware to enforce API key
+function apiKeyAuth(req, res, next) {
+  const key = req.get("x-api-key") || req.query.api_key;
+  if (!key || key !== API_KEY) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+}
 
 const router = new Router();
 
@@ -65,7 +75,7 @@ router.get("/", validateRedirect, async (req, res) => {
 });
 
 // Retrieval endpoint
-router.get("/retrieve_original", async (req, res) => {
+router.get("/retrieve_original", apiKeyAuth, async (req, res) => {
   const { our_param } = req.query;
   logger.info({ our_param }, "Retrieve_original request received");
   if (!our_param) {
