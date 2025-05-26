@@ -2,6 +2,7 @@
 import request from "supertest";
 import app from "../app.js";
 import redisClient from "../redisClient.js";
+import { API_KEY } from "../config.js";
 
 describe("Integration tests (Redis-backed with timestamp)", () => {
   beforeAll(async () => {
@@ -64,6 +65,7 @@ describe("Integration tests (Redis-backed with timestamp)", () => {
 
       const res = await request(app)
         .get("/retrieve_original")
+        .set("x-api-key", API_KEY)
         .query({ our_param: ourParam });
 
       expect(res.status).toBe(200);
@@ -73,14 +75,24 @@ describe("Integration tests (Redis-backed with timestamp)", () => {
       });
     });
 
+    it("returns 401 when API key is missing", async () => {
+      const res = await request(app)
+        .get("/retrieve_original")
+        .query({ our_param: "ABCDEFGHIJ" });
+      expect(res.status).toBe(401);
+    });
+
     it("returns 400 when our_param is missing", async () => {
-      const res = await request(app).get("/retrieve_original");
+      const res = await request(app)
+        .get("/retrieve_original")
+        .set("x-api-key", API_KEY);
       expect(res.status).toBe(400);
     });
 
     it("returns 404 when mapping not found", async () => {
       const res = await request(app)
         .get("/retrieve_original")
+        .set("x-api-key", API_KEY)
         .query({ our_param: "NOTEXIST" });
 
       expect(res.status).toBe(404);
