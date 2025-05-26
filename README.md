@@ -3,7 +3,7 @@
 This proof-of-concept implements a traffic-source redirect service with an internal parameter mapping to an affiliate link. It demonstrates:
 
 - Accepting `keyword`, `src`, and `creative` query parameters
-- Generating a 10‑character NanoID (`our_param`) for each unique combination
+- Generating a 10-character NanoID (`our_param`) for each unique combination
 - Redirecting to the affiliate URL with only `our_param` exposed
 - Retrieving original parameters via a secure API endpoint
 - Refreshing mappings on demand
@@ -14,37 +14,43 @@ This proof-of-concept implements a traffic-source redirect service with an inter
 
 ```
 affiliate-redirect-poc/
-├── app.js               # Express app setup
-├── server.js            # HTTP server bootstrap & graceful shutdown
-├── routes.js            # All HTTP route handlers
-├── redisClient.js       # Redis client initialization with logging
-├── config.js            # Environment variable configuration
-├── logger.js            # Pino logger configuration
-├── validation.js        # express-validator chains
-├── Dockerfile           # Multi-stage build for production image
-├── docker-compose.yml   # Compose file for app + Redis
-├── .env                 # Environment variables (not checked in)
-├── __tests__/app.test.js# Jest/Supertest integration tests
-└── README.md            # This file
+├── app.js                # Express app setup
+├── server.js             # HTTP server bootstrap & graceful shutdown
+├── routes.js             # All HTTP route handlers
+├── redisClient.js        # Redis client initialization with logging
+├── config.js             # Environment variable configuration
+├── logger.js             # Pino logger configuration
+├── validation.js         # express-validator chains
+├── Dockerfile            # Multi-stage build for production image
+├── docker-compose.yml    # Compose file for app + Redis
+├── .env                  # Environment variables (not checked in)
+├── __tests__/app.test.js # Jest/Supertest integration tests
+└── README.md             # This file
 ```
 
 ## ⚡ Quickstart
 
 ### Prerequisites
 
-- Docker & Docker Compose V2 installed
-- Node.js & npm (for running tests locally)
+- Docker & Docker Compose V2 (or legacy Docker Compose) installed
+- Node.js & npm installed
 
 ### Setup
 
 1. **Clone** the repository:
 
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/your-org/affiliate-redirect-poc.git
    cd affiliate-redirect-poc
    ```
 
-2. **Create** a `.env` file at the project root:
+2. **Install** Node.js dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. **Create** a `.env` file at the project root:
 
    ```ini
    PORT=3000
@@ -54,32 +60,38 @@ affiliate-redirect-poc/
    NODE_ENV=development
    ```
 
-3. **Start** the stack (Redis + app) in detached mode:
+4. **Ensure Redis** is accepting connections:
 
    ```bash
-   docker compose up --build -d
+   curl http://localhost:6379
+   # Should respond with +PONG
    ```
 
-4. **Verify** services:
+5. **Start** the stack (Redis + app) in detached mode:
+
+   ```bash
+   # With Docker Compose V2
+   docker compose up --build -d
+
+   # Or with legacy Docker Compose
+   docker-compose up --build -d
+   ```
+
+6. **Verify** services are running on the expected ports:
 
    ```bash
    docker compose ps
+   # You should see:
+   #   app       Up             0.0.0.0:3000->3000/tcp
+   #   redis     Up (healthy)   0.0.0.0:6379->6379/tcp
    ```
-
-### Logs
-
-To stream logs in real time:
-
-```bash
-docker compose logs -f app
-```
 
 ## 🚀 Usage
 
 ### Health check
 
 ```bash
-curl http://localhost:3000/health
+curl -i http://localhost:3000/health
 # → {"status":"ok"}
 ```
 
@@ -100,7 +112,7 @@ curl -i "http://localhost:3000/?keyword=shoes&src=google&creative=1234&refresh=t
 
 ```bash
 # Must include API key
-curl -H "x-api-key: your_secret_key_here" \
+curl -i -H "x-api-key: your_secret_key_here" \
   "http://localhost:3000/retrieve_original?our_param=XXXXXXXXXX"
 # → {"keyword":"shoes","src":"google","creative":"1234","created_at":"..."}
 ```
@@ -110,7 +122,6 @@ curl -H "x-api-key: your_secret_key_here" \
 Run the full test suite locally (requires Node.js):
 
 ```bash
-npm install
 npm test
 ```
 
