@@ -2,21 +2,25 @@
 
 ## 1. Architecture and Design Choices
 
-- **Service-Oriented**: We built a single Express-based microservice (`app.js`) responsible for:
+- **Modular Service**
 
-  1. Accepting incoming traffic source requests
-  2. Generating or retrieving an internal identifier (`our_param`)
-  3. Redirecting users to the affiliate link
-  4. Exposing a retrieval API
+  - **`config.js`**, **`redisClient.js`**, **`routes.js`**, **`app.js`**, **`server.js`**
+  - Promotes separation of concerns, testability, and easy maintenance.
 
-- **Containerization**: The entire stack (Node service + Redis) runs via Docker Compose, ensuring consistent environments and easy local testing.
+- **Containerization & Build**
 
-- **Redis as Storage**: Chosen for high-throughput key/value operations. We leverage:
+  - Docker Compose for local dev (Node + Redis).
+  - Multi-stage Dockerfile for CI/CD: builds dependencies in a builder stage, prunes devDeps in the final image.
 
-  - **Hashes** (`HSET`/`HGETALL`) to store mappings and metadata atomically
-  - **Atomic operations** (`MULTI`/`EXEC`) to ensure consistency
+- **Redis as Storage**
 
-- **Logging and Observability**: Instrumented with Pino for structured JSON logs at every layer (HTTP, Redis client, server lifecycle).
+  - High-throughput in-memory key/value store.
+  - Uses **hashes** (`HSET`/`HGETALL`) and **atomic operations** (`MULTI`/`EXEC`) for consistency.
+
+- **Health & Observability**
+  - **`/health`** endpoint checks Redis connectivity.
+  - Graceful shutdown on `SIGINT`/`SIGTERM`.
+  - Structured JSON logs via Pino at HTTP, Redis, and server layers.
 
 ## 2. Data Structures and Storage Mechanism
 
@@ -52,18 +56,24 @@
 
 ## 5. Security Considerations
 
-- **Parameter Validation**: `express-validator` enforces required types and whitelists allowed values, preventing injection attacks.
-- **No Sensitive Data in Logs**: Only non-PII request metadata is logged.
-- **API Key Protection**: Retrieval endpoint requires a valid `x-api-key` header or `api_key` query parameter, enforced via `API_KEY` from the environment.
-- **Rate Limiting**: Integrate middleware (e.g. `express-rate-limit`) to prevent abuse.
-- **HTTPS in Production**: The service should sit behind a TLS-terminating reverse proxy (e.g. NGINX or AWS ALB).
+- **Input Validation**
+  - `express-validator` enforces presence and format of all query params.
+- **API Key Protection**
+  - `retrieve_original` requires `x-api-key` or `api_key` matching `API_KEY` env var.
+- **Rate Limiting** (future)
+  - Integrate `express-rate-limit` to throttle abusive traffic.
+- **HTTPS & CORS**
+  - Serve behind TLS-terminating proxy; restrict redirect origins via CORS.
+- **Audit Logging**
+  - Every refresh is timestamped; could be extended with Redis lists for full history.
 
-## 6. Performance Optimizations
+## 6. Performance, Testing & CI/CD
 
-- **Redis**: Chosen for sub-millisecond lookups and high write throughput (1M req/day easily handled).
-- **Connection Pooling**: The Redis client is a singleton reused across requests.
-- **Lightweight Framework**: Express + NanoID + Pino keeps the binary small and fast.
-- **Docker Multi-stage**: (Optional) Use multi-stage builds to minimize container size in CI/CD.
+- **Redis** for sub-ms lookups, 1M req/day throughput.
+- **Connection Pooling** via singleton Redis client.
+- **Lightweight Stack**: Express + NanoID + Pino.
+- **Automated Tests**: Jest/Supertest cover redirect, retrieval, edge cases.
+- **CI/CD**: Pipeline runs `npm test`, `docker build --target runtime`, and `docker compose up --build --abort-on-container-exit` for smoke tests.
 
 ---
 
