@@ -1,5 +1,7 @@
 # System Design and Implementation
 
+_For quickstart and setup instructions, see [README.md](README.md)._
+
 ## 1. Architecture and Design Choices
 
 - **Modular Service**
@@ -104,5 +106,9 @@
 
    - Web UI for visualizing mappings and refresh history.
    - Bulk import/export of traffic mappings.
+
+7. **Edge-Case Integration Tests**
+
+   - Add tests for invalid `refresh` values, excessively long params, and Redis downtime to ensure robust error handling.
 
 _This document accompanies the POC codebase for an Innovation Developer interview task._
