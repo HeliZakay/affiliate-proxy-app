@@ -2,10 +2,9 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
 import redisClient from "./redisClient.js";
-import { AFFILIATE_BASE_URL } from "./config.js";
+import { AFFILIATE_BASE_URL, API_KEY } from "./config.js";
 import logger from "./logger.js";
 import { validateRedirect } from "./validation.js";
-import { API_KEY } from "./config.js";
 
 // Middleware to enforce API key
 function apiKeyAuth(req, res, next) {
@@ -35,15 +34,17 @@ router.get("/health", async (req, res) => {
 router.get("/", validateRedirect, async (req, res) => {
   const { keyword, src, creative, refresh } = req.query;
   logger.info({ keyword, src, creative, refresh }, "Redirect request received");
+
   if (!keyword || !src || !creative) {
     logger.warn({ keyword, src, creative }, "Missing required parameters");
     return res.status(400).send("Missing required parameters");
   }
 
   const compositeKey = `map:${keyword}:${src}:${creative}`;
-  let entry = await redisClient.hGetAll(compositeKey);
-  let ourParam = entry.our_param;
+  const entry = await redisClient.hGetAll(compositeKey);
+  let ourParam = entry && entry.our_param;
 
+  // Only reuse if there *is* an existing our_param and no refresh flag
   if (!ourParam || refresh === "true") {
     ourParam = nanoid(10);
     const revKey = `rev:${ourParam}`;
@@ -58,7 +59,7 @@ router.get("/", validateRedirect, async (req, res) => {
 
     // Store reverse mapping + timestamp
     await redisClient.hSet(revKey, {
-      payload: payload,
+      payload,
       created_at: now,
     });
 
@@ -71,13 +72,14 @@ router.get("/", validateRedirect, async (req, res) => {
   }
 
   const redirectUrl = `${AFFILIATE_BASE_URL}?our_param=${ourParam}`;
-  res.redirect(302, redirectUrl);
+  return res.redirect(302, redirectUrl);
 });
 
 // Retrieval endpoint
 router.get("/retrieve_original", apiKeyAuth, async (req, res) => {
   const { our_param } = req.query;
   logger.info({ our_param }, "Retrieve_original request received");
+
   if (!our_param) {
     logger.warn({ our_param }, "Missing our_param");
     return res.status(400).json({ error: "our_param is required" });
@@ -92,7 +94,7 @@ router.get("/retrieve_original", apiKeyAuth, async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 
-  if (!entry.payload) {
+  if (!entry || !entry.payload) {
     logger.warn({ revKey }, "Mapping not found");
     return res.status(404).json({ error: "Mapping not found" });
   }

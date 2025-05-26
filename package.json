@@ -23,6 +23,7 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.10",
     "pino-pretty": "^13.0.0",
+    "redis-mock": "^0.56.3",
     "supertest": "^7.1.1"
   }
 }
