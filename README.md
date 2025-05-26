@@ -40,8 +40,8 @@ affiliate-redirect-poc/
 1. **Clone** the repository:
 
    ```bash
-   git clone https://github.com/HeliZakay/affiliate-redirect-poc.git
-   cd affiliate-redirect-poc
+   git clone https://github.com/HeliZakay/affiliate-proxy-app.git
+   cd affiliate-proxy-app
    ```
 
 2. **Install** Node.js dependencies:
