@@ -60,14 +60,7 @@ affiliate-redirect-poc/
    NODE_ENV=development
    ```
 
-4. **Ensure Redis** is accepting connections:
-
-   ```bash
-   curl http://localhost:6379
-   # Should respond with +PONG
-   ```
-
-5. **Start** the stack (Redis + app) in detached mode:
+4. **Start** the stack (Redis + app) in detached mode:
 
    ```bash
    # With Docker Compose V2
@@ -77,7 +70,7 @@ affiliate-redirect-poc/
    docker-compose up --build -d
    ```
 
-6. **Verify** services are running on the expected ports:
+5. **Verify** services are running on the expected ports:
 
    ```bash
    docker compose ps
