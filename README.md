@@ -40,7 +40,7 @@ affiliate-redirect-poc/
 1. **Clone** the repository:
 
    ```bash
-   git clone https://github.com/your-org/affiliate-redirect-poc.git
+   git clone https://github.com/HeliZakay/affiliate-proxy-app.git
    cd affiliate-redirect-poc
    ```
 
